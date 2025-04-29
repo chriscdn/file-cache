@@ -1,6 +1,6 @@
 # @chriscdn/file-cache
 
-`FileCache` is a simple utility for caching generated and remote files. Common use cases include:
+`FileCache` is a node utility for caching generated and remote files. Common use cases include:
 
 - **Caching files stored in Amazon S3**: Keep a local cache of frequently accessed files to avoid repeatedly fetching them.
 - **Thumbnail caching**: Store generated thumbnails locally for quick access instead of regenerating them every time.
