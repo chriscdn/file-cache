@@ -1,14 +1,11 @@
 # @chriscdn/file-cache
 
-`FileCache` is a simple utility for caching generated and remote files.
+`FileCache` is a simple utility for caching generated and remote files. Common use cases include:
 
-Common use cases include:
-
-- **Caching photos stored in Amazon S3**: Keep a local cache of frequently accessed images to avoid repeatedly fetching them.
+- **Caching files stored in Amazon S3**: Keep a local cache of frequently accessed files to avoid repeatedly fetching them.
 - **Thumbnail caching**: Store generated thumbnails locally for quick access instead of regenerating them every time.
-- **Data processing results**: Cache intermediate or final outputs of time-consuming data processing tasks to speed up subsequent runs.
 
-`FileCache` does not store any state in memory, meaning your cache remains unaffected by application restarts. Cached files are automatically expired using a time-to-live (TTL) policy and the file's modified date. The file's modified date is updated each time the file is accessed.
+`FileCache` does not store state in memory, meaning your cache remains unaffected by application restarts. Cached files are automatically expired using a time-to-live (TTL) policy and the file's modified date. The file's modified date is updated each time the file is accessed.
 
 ## Installing
 
@@ -28,19 +25,22 @@ yarn add @chriscdn/file-cache
 
 The general approach is this:
 
-- Define an asynchronous callback function that accepts a file path and custom parameters, generates or retrieves the file, and writes it to the provided path.
-- Initialize a `FileCache` instance with this callback and additional options to control cache behavior.
-- Use the `FileCache` instance to retrieve the file path. It will hash the provided parameters to determine the corresponding file name, and either return an existing cached file or invoke the callback to generate a new one if necessary.
+- **Create a callback** — Write an async function that takes a file path and your custom input (like a URL), then generates or downloads the file and saves it to the path.
+- **Set up the cache** — Initialize a `FileCache` with your callback and some options (like where to store files and how long to keep them).
+- **Get a file** — Call the cache with your input. It will:
+  - Hash the input to create a unique file name.
+  - If the file is already cached and still valid, return its path.
+  - If not, run your callback to create it, then cache and return the path.
 
 Here's an example of an image cache:
 
 ```ts
 import { FileCache, type FileCacheOptions } from "@chriscdn/file-cache";
 
-// not required, but helps with calculating duration
+// not required, but helps with duration calculations
 import { Duration } from "@chriscdn/duration";
 
-const downloadAndConvertToJPGFunction = (url: string, filePath: string) => {
+const downloadAndConvertToJPG = async (url: string, filePath: string) => {
   // ...
 };
 
@@ -58,12 +58,12 @@ const options: FileCacheOptions<MyCallbackArgs> = {
   // to write a file to `filePath`.
   cb: async (filePath: string, context: MyCallbackArgs) => {
     const { url } = context;
-    await downloadAndConvertToJPGFunction(url, filePath);
+    await downloadAndConvertToJPG(url, filePath);
   },
 
   // Specifies the file extension for each cached file.
   // Currently, all files share the same extension (this may change in the future).
-  ext: "jpg",
+  ext: ".jpg",
 
   // Determines the time-to-live (TTL) of a cached file, in milliseconds,
   // based on when it was last accessed.

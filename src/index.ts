@@ -152,9 +152,17 @@ class FileCache<T extends Record<string, any>> {
    * generating a hash from the arguments to create a unique file name.
    */
   private resolveFileName(args: T): string {
-    return this._resolveFileName
-      ? this._resolveFileName(args)
-      : `${sha1(JSON.stringify(args, Object.keys(args).sort()))}${this._ext}`;
+    const baseName = sha1(JSON.stringify(args, Object.keys(args).sort()));
+
+    return path.format({
+      // dir: path.dirname(filePath),
+      name: baseName,
+      ext: this._ext,
+    });
+
+    // return this._resolveFileName
+    //   ? this._resolveFileName(args)
+    //   : `${sha1(JSON.stringify(args, Object.keys(args).sort()))}${this._ext}`;
   }
 
   /**
@@ -171,7 +179,7 @@ class FileCache<T extends Record<string, any>> {
       fileName[0],
       fileName[1],
       fileName[2],
-      fileName[3],
+      // fileName[3],
       fileName,
     );
 
