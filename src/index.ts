@@ -14,14 +14,14 @@ type Milliseconds = number;
 
 export type FileCacheOptions<T extends Record<string, any>> = {
   cachePath: DirectoryPath;
-  cb: (filePath: FilePath, context: T) => Promise<void>;
+  cb: (filePath: FilePath, context: T, cache: FileCache<T>) => Promise<void>;
   ext: string;
   cleanupInterval?: Milliseconds;
   ttl: Milliseconds;
   resolveFileName?: (args: T) => FilePath;
 };
 
-class FileCache<T> {
+class FileCache<T extends Record<string, any>> {
   private _cachePath: FileCacheOptions<T>["cachePath"];
   private _resolveFileName: FileCacheOptions<T>["resolveFileName"];
   private _cb: FileCacheOptions<T>["cb"];
@@ -47,12 +47,13 @@ class FileCache<T> {
       Duration.toMilliseconds({ days: 1 });
 
     (async () => {
-      if (!(await pathExists(this._cachePath))) {
+      if (!(await pathExists(cachePath))) {
         throw new Error("💥 FileCache error: cachePath does not exist.");
         // process.exit(1); // or throw new Error() if you want to let it bubble
       }
     })();
 
+    // fire and forget
     // fire and forget
     this.cleanup();
 
@@ -103,13 +104,18 @@ class FileCache<T> {
         touch(filePath);
       } else {
         await fs.mkdir(path.dirname(filePath), { recursive: true });
-        await this._cb(filePath, args);
+        await this._cb(filePath, args, this);
       }
     } finally {
       this._semaphore.release(filePath);
     }
 
     return filePath;
+  }
+
+  async has(args: T): Promise<boolean> {
+    const filePath = this.resolveFilePath(args);
+    return await pathExists(filePath);
   }
 
   /**
@@ -148,7 +154,7 @@ class FileCache<T> {
   private resolveFileName(args: T): string {
     return this._resolveFileName
       ? this._resolveFileName(args)
-      : `${sha1(JSON.stringify(args, Object.keys(args).sort()))}.${this._ext}`;
+      : `${sha1(JSON.stringify(args, Object.keys(args).sort()))}${this._ext}`;
   }
 
   /**
@@ -157,7 +163,7 @@ class FileCache<T> {
    * @param args The arguments used to resolve the file path
    * @returns The full path to the cached file
    */
-  private resolveFilePath(args: T): FilePath {
+  resolveFilePath(args: T): FilePath {
     const fileName = this.resolveFileName(args);
 
     const filePath = path.resolve(
@@ -171,6 +177,14 @@ class FileCache<T> {
 
     return filePath;
   }
+
+  async resolveCreateFilePath(args: T): Promise<FilePath> {
+    const filePath = this.resolveFilePath(args);
+
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+
+    return filePath;
+  }
 }
 
-export { FileCache };
+export { FileCache, type FilePath };

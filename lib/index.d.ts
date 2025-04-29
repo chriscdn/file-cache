@@ -3,13 +3,13 @@ type FilePath = string;
 type Milliseconds = number;
 export type FileCacheOptions<T extends Record<string, any>> = {
     cachePath: DirectoryPath;
-    cb: (filePath: FilePath, context: T) => Promise<void>;
+    cb: (filePath: FilePath, context: T, cache: FileCache<T>) => Promise<void>;
     ext: string;
     cleanupInterval?: Milliseconds;
     ttl: Milliseconds;
     resolveFileName?: (args: T) => FilePath;
 };
-declare class FileCache<T> {
+declare class FileCache<T extends Record<string, any>> {
     private _cachePath;
     private _resolveFileName;
     private _cb;
@@ -36,6 +36,7 @@ declare class FileCache<T> {
      * @returns The path to the cached or newly created file
      */
     getFile(args: T): Promise<FilePath>;
+    has(args: T): Promise<boolean>;
     /**
      * Deletes a file from the cache if it exists.
      *
@@ -60,6 +61,7 @@ declare class FileCache<T> {
      * @param args The arguments used to resolve the file path
      * @returns The full path to the cached file
      */
-    private resolveFilePath;
+    resolveFilePath(args: T): FilePath;
+    resolveCreateFilePath(args: T): Promise<FilePath>;
 }
-export { FileCache };
+export { FileCache, type FilePath };
