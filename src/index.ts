@@ -162,7 +162,7 @@ class FileCache<T extends Record<string, any>> {
    * generating a hash from the arguments to create a unique file name.
    */
   private resolveFileName(args: T): string {
-    const baseName = sha1(JSON.stringify(args, Object.keys(args).sort()));
+    const baseName = sha1(JSON.stringify(args));
 
     return path.format({
       // dir: path.dirname(filePath),
