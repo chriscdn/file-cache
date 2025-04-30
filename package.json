@@ -14,8 +14,7 @@
     "default": "./lib/index.js"
   },
   "scripts": {
-    "build": "rimraf ./lib/ && node ./esbuild.mjs && tsc --declaration",
-    "dev": "microbundle watch",
+    "build": "rimraf ./lib/ && tsc",
     "test": "vitest"
   },
   "dependencies": {
@@ -29,9 +28,9 @@
     "touch": "^3.1.1"
   },
   "devDependencies": {
+    "@tsconfig/node22": "^22.0.1",
     "@types/sha1": "^1.1.5",
     "@types/touch": "^3.1.5",
-    "esbuild": "^0.25.3",
     "typescript": "^5.8.3",
     "vitest": "^3.1.2"
   }

@@ -1,15 +1,11 @@
 {
+  "extends": "@tsconfig/node22/tsconfig.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["ESNext"],
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "strict": true,
     "allowSyntheticDefaultImports": true,
     "outDir": "./lib",
-    "declaration": true, // Generate declaration files
+    "declaration": true,
     "declarationDir": "./lib",
-    "skipLibCheck": true
+    "sourceMap": true
   },
   "include": ["./src/**/*"]
 }

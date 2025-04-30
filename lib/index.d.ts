@@ -6,8 +6,8 @@ export type FileCacheOptions<T extends Record<string, any>> = {
     autoCreateCachePath?: boolean;
     cb: (filePath: FilePath, context: T, cache: FileCache<T>) => Promise<void>;
     ext: string;
-    cleanupInterval?: Milliseconds;
     ttl: Milliseconds;
+    cleanupInterval?: Milliseconds;
 };
 declare class FileCache<T extends Record<string, any>> {
     private _cachePath;
@@ -61,6 +61,5 @@ declare class FileCache<T extends Record<string, any>> {
      * @returns The full path to the cached file
      */
     resolveFilePath(args: T): FilePath;
-    resolveCreateFilePath(args: T): Promise<FilePath>;
 }
 export { type DirectoryPath, FileCache, type FilePath };

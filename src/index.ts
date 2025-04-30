@@ -19,14 +19,13 @@ export type FileCacheOptions<T extends Record<string, any>> = {
   autoCreateCachePath?: boolean;
   cb: (filePath: FilePath, context: T, cache: FileCache<T>) => Promise<void>;
   ext: string;
-  cleanupInterval?: Milliseconds;
   ttl: Milliseconds;
-  // resolveFileName?: (args: T) => FilePath;
+  cleanupInterval?: Milliseconds;
 };
 
 class FileCache<T extends Record<string, any>> {
   private _cachePath: FileCacheOptions<T>["cachePath"];
-  // private _resolveFileName: FileCacheOptions<T>["resolveFileName"];
+
   private _cb: FileCacheOptions<T>["cb"];
   private _ext: FileCacheOptions<T>["ext"];
   private _ttl: FileCacheOptions<T>["ttl"];
@@ -42,26 +41,18 @@ class FileCache<T extends Record<string, any>> {
       FileCacheOptions<T>,
   ) {
     this._cachePath = cachePath;
-    // this._resolveFileName = resolveFileName;
     this._cb = cb;
     this._ext = ext;
     this._ttl = ttl;
     this._cleanupInterval = cleanupInterval ??
       Duration.toMilliseconds({ days: 1 });
 
-    (async () => {
-      if (!(await pathExists(cachePath))) {
-        throw new Error("💥 FileCache error: cachePath does not exist.");
-        // process.exit(1); // or throw new Error() if you want to let it bubble
-      }
-    })();
-
     if ((pathExistsSync(cachePath))) {
+      // we're good
     } else if (autoCreateCachePath) {
       fs.mkdirSync(cachePath, { recursive: true });
     } else {
       throw new Error("💥 FileCache error: cachePath does not exist.");
-      // process.exit(1); // or throw new Error() if you want to let it bubble
     }
 
     // fire and forget
@@ -106,14 +97,14 @@ class FileCache<T extends Record<string, any>> {
     try {
       await Promise.all([
         this._semaphore.acquire(filePath),
-        this._cleanupSemaphore.wait(),
+        this._cleanupSemaphore.wait(), // wait for any cleanup task to end
       ]);
 
       if (await pathExists(filePath)) {
         // fire and forget
         touch(filePath);
       } else {
-        await fs.mkdirSync(path.dirname(filePath), { recursive: true });
+        await fsp.mkdir(path.dirname(filePath), { recursive: true });
         await this._cb(filePath, args, this);
       }
     } finally {
@@ -137,11 +128,17 @@ class FileCache<T extends Record<string, any>> {
   async expire(args: T): Promise<boolean> {
     const filePath = this.resolveFilePath(args);
 
-    if (await pathExists(filePath)) {
-      await rimraf(filePath);
-      return true;
-    } else {
-      return false;
+    try {
+      await this._semaphore.acquire(filePath);
+
+      if (await pathExists(filePath)) {
+        await rimraf(filePath);
+        return true;
+      } else {
+        return false;
+      }
+    } finally {
+      this._semaphore.release(filePath);
     }
   }
 
@@ -165,14 +162,9 @@ class FileCache<T extends Record<string, any>> {
     const baseName = sha1(JSON.stringify(args));
 
     return path.format({
-      // dir: path.dirname(filePath),
       name: baseName,
       ext: this._ext,
     });
-
-    // return this._resolveFileName
-    //   ? this._resolveFileName(args)
-    //   : `${sha1(JSON.stringify(args, Object.keys(args).sort()))}${this._ext}`;
   }
 
   /**
@@ -196,13 +188,13 @@ class FileCache<T extends Record<string, any>> {
     return filePath;
   }
 
-  async resolveCreateFilePath(args: T): Promise<FilePath> {
-    const filePath = this.resolveFilePath(args);
+  // async resolveCreateFilePath(args: T): Promise<FilePath> {
+  //   const filePath = this.resolveFilePath(args);
 
-    await fsp.mkdir(path.dirname(filePath), { recursive: true });
+  //   await fsp.mkdir(path.dirname(filePath), { recursive: true });
 
-    return filePath;
-  }
+  //   return filePath;
+  // }
 }
 
 export { type DirectoryPath, FileCache, type FilePath };
