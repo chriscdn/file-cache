@@ -7,7 +7,7 @@ import touch from "touch";
 import { findNuke } from "@chriscdn/find-nuke";
 import { Duration } from "@chriscdn/duration";
 import { rimraf } from "rimraf";
-
+import { Memoize } from "@chriscdn/memoize";
 const fsp = fs.promises;
 
 type DirectoryPath = string;
@@ -18,7 +18,7 @@ export type FileCacheOptions<T extends Record<string, any>> = {
   cachePath: DirectoryPath;
   autoCreateCachePath?: boolean;
   cb: (filePath: FilePath, context: T, cache: FileCache<T>) => Promise<void>;
-  ext: string;
+  ext: (context: T) => string | Promise<string>;
   ttl: Milliseconds;
   cleanupInterval?: Milliseconds;
 };
@@ -62,6 +62,9 @@ class FileCache<T extends Record<string, any>> {
       this.cleanup.bind(this),
       this._cleanupInterval,
     );
+
+    this.resolveFileName = Memoize(this.resolveFileName.bind(this));
+    this.resolveFilePath = Memoize(this.resolveFilePath.bind(this));
   }
 
   /**
@@ -92,7 +95,7 @@ class FileCache<T extends Record<string, any>> {
    * @returns The path to the cached or newly created file
    */
   async getFile(args: T): Promise<FilePath> {
-    const filePath = this.resolveFilePath(args);
+    const filePath = await this.resolveFilePath(args);
 
     try {
       await Promise.all([
@@ -115,7 +118,7 @@ class FileCache<T extends Record<string, any>> {
   }
 
   async has(args: T): Promise<boolean> {
-    const filePath = this.resolveFilePath(args);
+    const filePath = await this.resolveFilePath(args);
     return await pathExists(filePath);
   }
 
@@ -126,7 +129,7 @@ class FileCache<T extends Record<string, any>> {
    * @returns True if the file was deleted, false if it didn't exist
    */
   async expire(args: T): Promise<boolean> {
-    const filePath = this.resolveFilePath(args);
+    const filePath = await this.resolveFilePath(args);
 
     try {
       await this._semaphore.acquire(filePath);
@@ -158,12 +161,12 @@ class FileCache<T extends Record<string, any>> {
    * Uses the provided `resolveFileName` function if available, or falls back to
    * generating a hash from the arguments to create a unique file name.
    */
-  private resolveFileName(args: T): string {
+  private async resolveFileName(args: T): Promise<string> {
     const baseName = sha1(JSON.stringify(args));
 
     return path.format({
       name: baseName,
-      ext: this._ext,
+      ext: await this._ext(args),
     });
   }
 
@@ -173,8 +176,8 @@ class FileCache<T extends Record<string, any>> {
    * @param args The arguments used to resolve the file path
    * @returns The full path to the cached file
    */
-  resolveFilePath(args: T): FilePath {
-    const fileName = this.resolveFileName(args);
+  async resolveFilePath(args: T): Promise<FilePath> {
+    const fileName = await this.resolveFileName(args);
 
     const filePath = path.resolve(
       this._cachePath,

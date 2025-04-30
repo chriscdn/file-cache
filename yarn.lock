@@ -15,10 +15,17 @@
     "@chriscdn/duration" "^1.0.3"
     rimraf "^6.0.1"
 
-"@chriscdn/promise-semaphore@^2.0.11":
-  version "2.0.11"
-  resolved "https://registry.yarnpkg.com/@chriscdn/promise-semaphore/-/promise-semaphore-2.0.11.tgz#f0b9d1fffd35b341c8acc4d7a57ffdda05a2e8b3"
-  integrity sha512-Fw68keZcPzifN44h3MXzYaLhxTpGWiQT6iEdJgdwaA2n86r9dCbljiuiys7BUKDDz4CIsVIflLTNXYS/RXULJA==
+"@chriscdn/memoize@^1.0.9":
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/@chriscdn/memoize/-/memoize-1.0.9.tgz#7a21c8281f6aa404c65941b81b471dac29ec90d7"
+  integrity sha512-AwRujpvJ+MPg0PlKO1WevrPM1dG9DwyqPPazRPtOcfExrh60nZrjOBMtR0SCn/vjuckl7lm5ZyJv+Asn5mgJsQ==
+  dependencies:
+    quick-lru "^7.0.1"
+
+"@chriscdn/promise-semaphore@^2.0.12":
+  version "2.0.12"
+  resolved "https://registry.yarnpkg.com/@chriscdn/promise-semaphore/-/promise-semaphore-2.0.12.tgz#f68070688b730f984100b3b994563f3c0b6a7e76"
+  integrity sha512-hgbaEg1n+q2ZKKBCrzjRK56pB+IDkj4tFHywz5aVq4sX+2nvyxmD/MuPO8ULe+xOpoCkS3djTliWnXUyGOi3Yg==
 
 "@esbuild/aix-ppc64@0.25.3":
   version "0.25.3"
@@ -729,6 +736,11 @@ postcss@^8.5.3:
     nanoid "^3.3.8"
     picocolors "^1.1.1"
     source-map-js "^1.2.1"
+
+quick-lru@^7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/quick-lru/-/quick-lru-7.0.1.tgz#6df758a00721b9d619769b1b34689e65bea28c7e"
+  integrity sha512-kLjThirJMkWKutUKbZ8ViqFc09tDQhlbQo2MNuVeLWbRauqYP96Sm6nzlQ24F0HFjUNZ4i9+AgldJ9H6DZXi7g==
 
 rimraf@^6.0.1:
   version "6.0.1"

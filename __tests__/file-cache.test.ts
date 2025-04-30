@@ -18,7 +18,7 @@ describe("Cache Expiration", async () => {
         filePath,
       );
     },
-    ext: "pdf",
+    ext: () => ".pdf",
     ttl: Duration.toMilliseconds({ seconds: 1 }),
     cleanupInterval: Duration.toMilliseconds({ seconds: 2 }),
   });

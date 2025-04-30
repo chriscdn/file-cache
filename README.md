@@ -61,9 +61,8 @@ const options: FileCacheOptions<MyCallbackArgs> = {
     await downloadAndConvertToJPG(url, filePath);
   },
 
-  // Specifies the file extension for each cached file.
-  // Currently, all files share the same extension (this may change in the future).
-  ext: ".jpg",
+  // Specifies the file extension for the cached file. Can be synchronous or asynchronous.
+  ext: (context: MyCallbackArgs) => ".jpg",
 
   // Determines the time-to-live (TTL) of a cached file, in milliseconds,
   // based on when it was last accessed.
