@@ -1,6 +1,6 @@
 import path from "path";
-import { promises as fs } from "fs";
-import { pathExists } from "path-exists";
+import fs from "fs";
+import { pathExists, pathExistsSync } from "path-exists";
 import sha1 from "sha1";
 import Semaphore from "@chriscdn/promise-semaphore";
 import touch from "touch";
@@ -8,22 +8,25 @@ import { findNuke } from "@chriscdn/find-nuke";
 import { Duration } from "@chriscdn/duration";
 import { rimraf } from "rimraf";
 
+const fsp = fs.promises;
+
 type DirectoryPath = string;
 type FilePath = string;
 type Milliseconds = number;
 
 export type FileCacheOptions<T extends Record<string, any>> = {
   cachePath: DirectoryPath;
+  autoCreateCachePath?: boolean;
   cb: (filePath: FilePath, context: T, cache: FileCache<T>) => Promise<void>;
   ext: string;
   cleanupInterval?: Milliseconds;
   ttl: Milliseconds;
-  resolveFileName?: (args: T) => FilePath;
+  // resolveFileName?: (args: T) => FilePath;
 };
 
 class FileCache<T extends Record<string, any>> {
   private _cachePath: FileCacheOptions<T>["cachePath"];
-  private _resolveFileName: FileCacheOptions<T>["resolveFileName"];
+  // private _resolveFileName: FileCacheOptions<T>["resolveFileName"];
   private _cb: FileCacheOptions<T>["cb"];
   private _ext: FileCacheOptions<T>["ext"];
   private _ttl: FileCacheOptions<T>["ttl"];
@@ -35,11 +38,11 @@ class FileCache<T extends Record<string, any>> {
   private _cleanupSemaphore: Semaphore = new Semaphore();
 
   constructor(
-    { cachePath, resolveFileName, cb, ext, ttl, cleanupInterval }:
+    { cachePath, autoCreateCachePath, cb, ext, ttl, cleanupInterval }:
       FileCacheOptions<T>,
   ) {
     this._cachePath = cachePath;
-    this._resolveFileName = resolveFileName;
+    // this._resolveFileName = resolveFileName;
     this._cb = cb;
     this._ext = ext;
     this._ttl = ttl;
@@ -53,7 +56,14 @@ class FileCache<T extends Record<string, any>> {
       }
     })();
 
-    // fire and forget
+    if ((pathExistsSync(cachePath))) {
+    } else if (autoCreateCachePath) {
+      fs.mkdirSync(cachePath, { recursive: true });
+    } else {
+      throw new Error("💥 FileCache error: cachePath does not exist.");
+      // process.exit(1); // or throw new Error() if you want to let it bubble
+    }
+
     // fire and forget
     this.cleanup();
 
@@ -103,7 +113,7 @@ class FileCache<T extends Record<string, any>> {
         // fire and forget
         touch(filePath);
       } else {
-        await fs.mkdir(path.dirname(filePath), { recursive: true });
+        await fs.mkdirSync(path.dirname(filePath), { recursive: true });
         await this._cb(filePath, args, this);
       }
     } finally {
@@ -189,10 +199,10 @@ class FileCache<T extends Record<string, any>> {
   async resolveCreateFilePath(args: T): Promise<FilePath> {
     const filePath = this.resolveFilePath(args);
 
-    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fsp.mkdir(path.dirname(filePath), { recursive: true });
 
     return filePath;
   }
 }
 
-export { FileCache, type FilePath };
+export { type DirectoryPath, FileCache, type FilePath };
