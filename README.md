@@ -53,6 +53,9 @@ const options: FileCacheOptions<MyCallbackArgs> = {
   // anything else in this directory.
   cachePath: "/some/path/on/your/filesystem/",
 
+  // optional, automatically create cachePath if it doesn't exist
+  autoCreateCachePath: false,
+
   // An asynchronous callback function, which is executed if no matching cached
   // file is found. It is the responsibility of this function to use `context`
   // to write a file to `filePath`.
@@ -83,6 +86,7 @@ const imageFilePath = await imageCache({
 ## Cleanup
 
 `FileCache` instances are intended to be instantiated as singletons, persisting throughout the lifecycle of your app. If you need to deallocate an instance, be sure to call the `destroy()` method to prevent a memory leak.
+This does not cleanup the cache directory.
 
 ## Tests
 
