@@ -4,21 +4,23 @@ type Milliseconds = number;
 export type FileCacheOptions<T extends Record<string, any>> = {
     cachePath: DirectoryPath;
     autoCreateCachePath?: boolean;
-    cb: (filePath: FilePath, context: T, cache: FileCache<T>) => Promise<void>;
-    ext: (context: T) => string | Promise<string>;
+    cb: (filePath: FilePath, args: T, cache: FileCache<T>) => Promise<void>;
+    ext: (args: T) => string | Promise<string>;
+    resolveCacheFileKey?: (args: T) => string | Promise<string>;
     ttl: Milliseconds;
     cleanupInterval?: Milliseconds;
 };
 declare class FileCache<T extends Record<string, any>> {
     private _cachePath;
     private _cb;
-    private _ext;
     private _ttl;
     private _cleanupInterval;
+    private _resolveCacheFileKey;
+    private _ext;
     private _intervalId;
     private _semaphore;
     private _cleanupSemaphore;
-    constructor({ cachePath, autoCreateCachePath, cb, ext, ttl, cleanupInterval }: FileCacheOptions<T>);
+    constructor({ cachePath, autoCreateCachePath, cb, ext, ttl, cleanupInterval, resolveCacheFileKey, }: FileCacheOptions<T>);
     /**
      * Runs a cleanup pass to remove files older than 1 day from the cache.
      * This is called periodically, but can be triggered manually.

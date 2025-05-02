@@ -17,8 +17,9 @@ type Milliseconds = number;
 export type FileCacheOptions<T extends Record<string, any>> = {
   cachePath: DirectoryPath;
   autoCreateCachePath?: boolean;
-  cb: (filePath: FilePath, context: T, cache: FileCache<T>) => Promise<void>;
-  ext: (context: T) => string | Promise<string>;
+  cb: (filePath: FilePath, args: T, cache: FileCache<T>) => Promise<void>;
+  ext: (args: T) => string | Promise<string>;
+  resolveCacheFileKey?: (args: T) => string | Promise<string>;
   ttl: Milliseconds;
   cleanupInterval?: Milliseconds;
 };
@@ -27,18 +28,32 @@ class FileCache<T extends Record<string, any>> {
   private _cachePath: FileCacheOptions<T>["cachePath"];
 
   private _cb: FileCacheOptions<T>["cb"];
-  private _ext: FileCacheOptions<T>["ext"];
+
   private _ttl: FileCacheOptions<T>["ttl"];
   private _cleanupInterval: FileCacheOptions<T>["cleanupInterval"];
+
+  private _resolveCacheFileKey: Required<
+    FileCacheOptions<T>
+  >["resolveCacheFileKey"];
+  private _ext: FileCacheOptions<T>["ext"];
 
   private _intervalId: ReturnType<typeof setInterval> | null = null;
 
   private _semaphore: Semaphore = new Semaphore();
   private _cleanupSemaphore: Semaphore = new Semaphore();
 
+  // private _fileNameResover(args:T) =>
+
   constructor(
-    { cachePath, autoCreateCachePath, cb, ext, ttl, cleanupInterval }:
-      FileCacheOptions<T>,
+    {
+      cachePath,
+      autoCreateCachePath,
+      cb,
+      ext,
+      ttl,
+      cleanupInterval,
+      resolveCacheFileKey,
+    }: FileCacheOptions<T>,
   ) {
     this._cachePath = cachePath;
     this._cb = cb;
@@ -46,6 +61,9 @@ class FileCache<T extends Record<string, any>> {
     this._ttl = ttl;
     this._cleanupInterval = cleanupInterval ??
       Duration.toMilliseconds({ days: 1 });
+
+    this._resolveCacheFileKey = resolveCacheFileKey ??
+      ((args: T) => sha1(JSON.stringify(args)));
 
     if ((pathExistsSync(cachePath))) {
       // we're good
@@ -162,11 +180,14 @@ class FileCache<T extends Record<string, any>> {
    * generating a hash from the arguments to create a unique file name.
    */
   private async resolveFileName(args: T): Promise<string> {
-    const baseName = sha1(JSON.stringify(args));
+    const [name, ext] = await Promise.all([
+      this._resolveCacheFileKey(args),
+      this._ext(args),
+    ]);
 
     return path.format({
-      name: baseName,
-      ext: await this._ext(args),
+      name,
+      ext,
     });
   }
 
