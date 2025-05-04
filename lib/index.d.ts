@@ -19,7 +19,7 @@ declare class FileCache<T extends Record<string, any>> {
     private _ext;
     private _intervalId;
     private _semaphore;
-    private _cleanupSemaphore;
+    private _cleanupGroupSemaphore;
     constructor({ cachePath, autoCreateCachePath, cb, ext, ttl, cleanupInterval, resolveCacheFileKey, }: FileCacheOptions<T>);
     /**
      * Runs a cleanup pass to remove files older than 1 day from the cache.

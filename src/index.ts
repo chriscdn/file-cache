@@ -2,12 +2,13 @@ import path from "path";
 import fs from "fs";
 import { pathExists, pathExistsSync } from "path-exists";
 import sha1 from "sha1";
-import Semaphore from "@chriscdn/promise-semaphore";
+import { GroupSemaphore, Semaphore } from "@chriscdn/promise-semaphore";
 import touch from "touch";
 import { findNuke } from "@chriscdn/find-nuke";
 import { Duration } from "@chriscdn/duration";
 import { rimraf } from "rimraf";
 import { Memoize } from "@chriscdn/memoize";
+
 const fsp = fs.promises;
 
 type DirectoryPath = string;
@@ -40,7 +41,7 @@ class FileCache<T extends Record<string, any>> {
   private _intervalId: ReturnType<typeof setInterval> | null = null;
 
   private _semaphore: Semaphore = new Semaphore();
-  private _cleanupSemaphore: Semaphore = new Semaphore();
+  private _cleanupGroupSemaphore: GroupSemaphore = new GroupSemaphore();
 
   // private _fileNameResover(args:T) =>
 
@@ -91,14 +92,14 @@ class FileCache<T extends Record<string, any>> {
    */
   async cleanup() {
     try {
-      await this._cleanupSemaphore.acquire();
+      await this._cleanupGroupSemaphore.acquire("cleanup");
       await findNuke(this._cachePath, {
         olderThan: this._ttl,
         verbose: true,
         deleteEmptyDirectories: true,
       });
     } finally {
-      this._cleanupSemaphore.release();
+      this._cleanupGroupSemaphore.release("cleanup");
     }
   }
 
@@ -116,9 +117,12 @@ class FileCache<T extends Record<string, any>> {
     const filePath = await this.resolveFilePath(args);
 
     try {
+      // await this._cleanupGroupSemaphore.acquire("thumbnail");
+      // await this._semaphore.acquire(filePath);
+
       await Promise.all([
+        this._cleanupGroupSemaphore.acquire("getFile"),
         this._semaphore.acquire(filePath),
-        this._cleanupSemaphore.wait(), // wait for any cleanup task to end
       ]);
 
       if (await pathExists(filePath)) {
@@ -130,6 +134,7 @@ class FileCache<T extends Record<string, any>> {
       }
     } finally {
       this._semaphore.release(filePath);
+      this._cleanupGroupSemaphore.release("getFile");
     }
 
     return filePath;
@@ -150,7 +155,10 @@ class FileCache<T extends Record<string, any>> {
     const filePath = await this.resolveFilePath(args);
 
     try {
-      await this._semaphore.acquire(filePath);
+      await Promise.all([
+        this._cleanupGroupSemaphore.acquire("expire"),
+        this._semaphore.acquire(filePath),
+      ]);
 
       if (await pathExists(filePath)) {
         await rimraf(filePath);
@@ -160,6 +168,7 @@ class FileCache<T extends Record<string, any>> {
       }
     } finally {
       this._semaphore.release(filePath);
+      this._cleanupGroupSemaphore.release("expire");
     }
   }
 
@@ -211,14 +220,6 @@ class FileCache<T extends Record<string, any>> {
 
     return filePath;
   }
-
-  // async resolveCreateFilePath(args: T): Promise<FilePath> {
-  //   const filePath = this.resolveFilePath(args);
-
-  //   await fsp.mkdir(path.dirname(filePath), { recursive: true });
-
-  //   return filePath;
-  // }
 }
 
 export { type DirectoryPath, FileCache, type FilePath };
