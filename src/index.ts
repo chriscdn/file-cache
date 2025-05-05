@@ -6,7 +6,7 @@ import { GroupSemaphore, Semaphore } from "@chriscdn/promise-semaphore";
 import touch from "touch";
 import { findNuke } from "@chriscdn/find-nuke";
 import { Duration } from "@chriscdn/duration";
-import { rimraf } from "rimraf";
+
 import { Memoize } from "@chriscdn/memoize";
 
 const fsp = fs.promises;
@@ -14,6 +14,9 @@ const fsp = fs.promises;
 type DirectoryPath = string;
 type FilePath = string;
 type Milliseconds = number;
+
+const deleteFile = async (filepath: FilePath) =>
+  await fs.promises.unlink(filepath);
 
 export type FileCacheOptions<T extends Record<string, any>> = {
   cachePath: DirectoryPath;
@@ -161,7 +164,7 @@ class FileCache<T extends Record<string, any>> {
       ]);
 
       if (await pathExists(filePath)) {
-        await rimraf(filePath);
+        await deleteFile(filePath);
         return true;
       } else {
         return false;
