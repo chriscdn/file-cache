@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@chriscdn/duration": "^1.0.3",
-    "@chriscdn/find-nuke": "^0.0.4",
+    "@chriscdn/find-nuke": "^0.0.5",
     "@chriscdn/memoize": "^1.0.9",
     "@chriscdn/promise-semaphore": "^3.0.1",
     "path-exists": "^5.0.0",
