@@ -12,6 +12,7 @@ import { Memoize } from "@chriscdn/memoize";
 const fsp = fs.promises;
 
 type DirectoryPath = string;
+type FileName = string;
 type FilePath = string;
 type Milliseconds = number;
 
@@ -191,7 +192,7 @@ class FileCache<T extends Record<string, any>> {
    * Uses the provided `resolveFileName` function if available, or falls back to
    * generating a hash from the arguments to create a unique file name.
    */
-  private async resolveFileName(args: T): Promise<string> {
+  private async resolveFileName(args: T): Promise<FileName> {
     const [name, ext] = await Promise.all([
       this._resolveCacheFileKey(args),
       this._ext(args),
@@ -200,7 +201,7 @@ class FileCache<T extends Record<string, any>> {
     return path.format({
       name,
       ext,
-    });
+    }) as FileName;
   }
 
   /**
@@ -225,4 +226,4 @@ class FileCache<T extends Record<string, any>> {
   }
 }
 
-export { type DirectoryPath, FileCache, type FilePath };
+export { type DirectoryPath, FileCache, type FileName, type FilePath };

@@ -1,4 +1,5 @@
 type DirectoryPath = string;
+type FileName = string;
 type FilePath = string;
 type Milliseconds = number;
 export type FileCacheOptions<T extends Record<string, any>> = {
@@ -64,4 +65,4 @@ declare class FileCache<T extends Record<string, any>> {
      */
     resolveFilePath(args: T): Promise<FilePath>;
 }
-export { type DirectoryPath, FileCache, type FilePath };
+export { type DirectoryPath, FileCache, type FileName, type FilePath };
