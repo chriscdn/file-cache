@@ -1,17 +1,11 @@
 # @chriscdn/file-cache
 
-`FileCache` is a node utility for caching generated and remote files. Common use
-cases include:
+`FileCache` is a node utility for caching generated and remote files. Common use cases include:
 
-- **Caching files stored in Amazon S3**: Keep a local cache of frequently
-  accessed files to avoid repeatedly fetching them.
-- **Thumbnail caching**: Store generated thumbnails locally for quick access
-  instead of regenerating them every time.
+- **Caching files stored in Amazon S3**: Keep a local cache of frequently accessed files to avoid repeatedly fetching them.
+- **Thumbnail caching**: Store generated thumbnails locally for quick access instead of regenerating them every time.
 
-`FileCache` does not store state in memory, meaning your cache remains
-unaffected by application restarts. Cached files are automatically expired using
-a time-to-live (TTL) policy and the file's modified date. The file's modified
-date is updated each time the file is accessed.
+`FileCache` does not store state in memory, meaning your cache remains unaffected by application restarts. Cached files are automatically expired using a time-to-live (TTL) policy and the file's modified date. The file's modified date is updated each time the file is accessed.
 
 ## Installing
 
@@ -31,11 +25,8 @@ yarn add @chriscdn/file-cache
 
 The general approach is this:
 
-- **Create a callback** — Write an async function that takes a file path and
-  your custom input (like a URL), then generates or downloads the file and saves
-  it to the path.
-- **Set up the cache** — Initialize a `FileCache` with your callback and some
-  options (like where to store files and how long to keep them).
+- **Create a callback** — Write an async function that takes a file path and your custom input (like a URL), then generates or downloads the file and saves it to the path.
+- **Set up the cache** — Initialize a `FileCache` with your callback and some options (like where to store files and how long to keep them).
 - **Get a file** — Call the cache with your input. It will:
   - Hash the input to create a unique file name.
   - If the file is already cached and still valid, return its path.
@@ -94,10 +85,7 @@ const imageFilePath = await imageCache({
 
 ## Cleanup
 
-`FileCache` instances are intended to be instantiated as singletons, persisting
-throughout the lifecycle of your app. If you need to deallocate an instance, be
-sure to call the `destroy()` method to prevent a memory leak. This does not
-cleanup the cache directory.
+`FileCache` instances are intended to be instantiated as singletons, persisting throughout the lifecycle of your app. If you need to deallocate an instance, be sure to call the `destroy()` method to prevent a memory leak. This does not cleanup the cache directory.
 
 ## Tests
 

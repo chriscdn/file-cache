@@ -7,7 +7,7 @@ import touch from "touch";
 import { findNuke } from "@chriscdn/find-nuke";
 import { Duration } from "@chriscdn/duration";
 
-import { Memoize } from "@chriscdn/memoize";
+// import { Memoize } from "@chriscdn/memoize";
 
 const fsp = fs.promises;
 
@@ -86,8 +86,8 @@ class FileCache<T extends Record<string, any>> {
       this._cleanupInterval,
     );
 
-    this.resolveFileName = Memoize(this.resolveFileName.bind(this));
-    this.resolveFilePath = Memoize(this.resolveFilePath.bind(this));
+    // this.resolveFileName = Memoize(this.resolveFileName.bind(this));
+    // this.resolveFilePath = Memoize(this.resolveFilePath.bind(this));
   }
 
   /**
@@ -121,9 +121,6 @@ class FileCache<T extends Record<string, any>> {
     const filePath = await this.resolveFilePath(args);
 
     try {
-      // await this._cleanupGroupSemaphore.acquire("thumbnail");
-      // await this._semaphore.acquire(filePath);
-
       await Promise.all([
         this._cleanupGroupSemaphore.acquire("getFile"),
         this._semaphore.acquire(filePath),
@@ -218,7 +215,6 @@ class FileCache<T extends Record<string, any>> {
       fileName[0],
       fileName[1],
       fileName[2],
-      // fileName[3],
       fileName,
     );
 
