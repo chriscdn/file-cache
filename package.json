@@ -1,6 +1,6 @@
 {
   "name": "@chriscdn/file-cache",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "File cache ",
   "repository": "https://github.com/chriscdn/file-cache",
   "author": "Christopher Meyer <chris@schwiiz.org>",
