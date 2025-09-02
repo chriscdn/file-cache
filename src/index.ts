@@ -7,7 +7,7 @@ import touch from "touch";
 import { findNuke } from "@chriscdn/find-nuke";
 import { Duration } from "@chriscdn/duration";
 
-// import { Memoize } from "@chriscdn/memoize";
+import { Memoize } from "@chriscdn/memoize";
 
 const fsp = fs.promises;
 
@@ -86,8 +86,8 @@ class FileCache<T extends Record<string, any>> {
       this._cleanupInterval,
     );
 
-    // this.resolveFileName = Memoize(this.resolveFileName.bind(this));
-    // this.resolveFilePath = Memoize(this.resolveFilePath.bind(this));
+    this.resolveFileName = Memoize(this.resolveFileName.bind(this));
+    this.resolveFilePath = Memoize(this.resolveFilePath.bind(this));
   }
 
   /**

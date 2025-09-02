@@ -15,7 +15,15 @@
     "@chriscdn/duration" "^1.0.3"
     rimraf "5"
 
-"@chriscdn/promise-semaphore@^3.1.1":
+"@chriscdn/memoize@^1.0.10":
+  version "1.0.10"
+  resolved "https://registry.yarnpkg.com/@chriscdn/memoize/-/memoize-1.0.10.tgz#6620e9e711a5dbeee145b62237c4116b01636936"
+  integrity sha512-ODWvDyNARgVWCNBpD3KWeejqO1MoUVxWzuYZ3g1njIMt42tGxF6EtPAbefApgd/pTtVOXHMkWkH5TPY5UtVWFQ==
+  dependencies:
+    "@chriscdn/promise-semaphore" "^3.0.1"
+    quick-lru "^7.0.1"
+
+"@chriscdn/promise-semaphore@^3.0.1", "@chriscdn/promise-semaphore@^3.1.1":
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/@chriscdn/promise-semaphore/-/promise-semaphore-3.1.1.tgz#cc9c273ae52eaf05bd615c89e262d1c3a3763c35"
   integrity sha512-ALLLLYlPfd/QZLptcVi6HQRK1zaCDWZoqYYw+axLmCatFs4gVTSZ5nqlyxwFe4qwR/K84HvOMa9hxda881FqMA==
@@ -766,6 +774,11 @@ postcss@^8.5.6:
     nanoid "^3.3.11"
     picocolors "^1.1.1"
     source-map-js "^1.2.1"
+
+quick-lru@^7.0.1:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/quick-lru/-/quick-lru-7.1.0.tgz#79646ebd1502ec39e4bd9c246b6128280d9d0cf0"
+  integrity sha512-Pzd/4IFnTb8E+I1P5rbLQoqpUHcXKg48qTYKi4EANg+sTPwGFEMOcYGiiZz6xuQcOMZP7MPsrdAPx+16Q8qahg==
 
 rimraf@5:
   version "5.0.10"
