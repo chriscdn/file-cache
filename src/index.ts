@@ -7,47 +7,33 @@ import touch from "touch";
 import { findNuke } from "@chriscdn/find-nuke";
 import { Duration } from "@chriscdn/duration";
 
-import { Memoize } from "@chriscdn/memoize";
-
-const fsp = fs.promises;
-
 type DirectoryPath = string;
 type FileName = string;
 type FilePath = string;
 type Milliseconds = number;
-
-const deleteFile = async (filepath: FilePath) =>
-  await fs.promises.unlink(filepath);
 
 export type FileCacheOptions<T extends Record<string, any>> = {
   cachePath: DirectoryPath;
   autoCreateCachePath?: boolean;
   cb: (filePath: FilePath, args: T, cache: FileCache<T>) => Promise<void>;
   ext: (args: T) => string | Promise<string>;
-  resolveCacheFileKey?: (args: T) => string | Promise<string>;
+  resolveCacheKey?: (args: T) => string | Promise<string>;
   ttl: Milliseconds;
   cleanupInterval?: Milliseconds;
 };
 
 class FileCache<T extends Record<string, any>> {
   private _cachePath: FileCacheOptions<T>["cachePath"];
-
   private _cb: FileCacheOptions<T>["cb"];
-
   private _ttl: FileCacheOptions<T>["ttl"];
   private _cleanupInterval: FileCacheOptions<T>["cleanupInterval"];
-
-  private _resolveCacheFileKey: Required<
+  private _resolveCacheKey: Required<
     FileCacheOptions<T>
-  >["resolveCacheFileKey"];
+  >["resolveCacheKey"];
   private _ext: FileCacheOptions<T>["ext"];
-
   private _intervalId: ReturnType<typeof setInterval> | null = null;
-
   private _semaphore: Semaphore = new Semaphore();
   private _cleanupGroupSemaphore: GroupSemaphore = new GroupSemaphore();
-
-  // private _fileNameResover(args:T) =>
 
   constructor(
     {
@@ -57,7 +43,7 @@ class FileCache<T extends Record<string, any>> {
       ext,
       ttl,
       cleanupInterval,
-      resolveCacheFileKey,
+      resolveCacheKey,
     }: FileCacheOptions<T>,
   ) {
     this._cachePath = cachePath;
@@ -67,9 +53,10 @@ class FileCache<T extends Record<string, any>> {
     this._cleanupInterval = cleanupInterval ??
       Duration.toMilliseconds({ days: 1 });
 
-    this._resolveCacheFileKey = resolveCacheFileKey ??
-      ((args: T) => sha1(JSON.stringify(args)));
+    this._resolveCacheKey = resolveCacheKey ??
+      ((args: T) => (JSON.stringify(args)));
 
+    // Startup code
     if ((pathExistsSync(cachePath))) {
       // we're good
     } else if (autoCreateCachePath) {
@@ -85,26 +72,26 @@ class FileCache<T extends Record<string, any>> {
       this.cleanup.bind(this),
       this._cleanupInterval,
     );
-
-    this.resolveFileName = Memoize(this.resolveFileName.bind(this));
-    this.resolveFilePath = Memoize(this.resolveFilePath.bind(this));
   }
 
   /**
-   * Runs a cleanup pass to remove files older than 1 day from the cache.
-   * This is called periodically, but can be triggered manually.
+   * Resolves the filename for the cache based on the provided arguments.
+   *
+   * Uses the provided `resolveFileName` function if available, or falls back to
+   * generating a hash from the arguments to create a unique file name.
    */
-  async cleanup() {
-    try {
-      await this._cleanupGroupSemaphore.acquire("cleanup");
-      await findNuke(this._cachePath, {
-        olderThan: this._ttl,
-        verbose: true,
-        deleteEmptyDirectories: true,
-      });
-    } finally {
-      this._cleanupGroupSemaphore.release("cleanup");
-    }
+  private async resolveFileName(args: T): Promise<FileName> {
+    const [name, ext] = await Promise.all([
+      this._resolveCacheKey(args),
+      this._ext(args),
+    ]);
+
+    const resolvedFileName = sha1(JSON.stringify([name, ext]));
+
+    return path.format({
+      name: resolvedFileName,
+      ext,
+    }) as FileName;
   }
 
   /**
@@ -130,7 +117,7 @@ class FileCache<T extends Record<string, any>> {
         // fire and forget
         touch(filePath);
       } else {
-        await fsp.mkdir(path.dirname(filePath), { recursive: true });
+        await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
         await this._cb(filePath, args, this);
       }
     } finally {
@@ -139,66 +126,6 @@ class FileCache<T extends Record<string, any>> {
     }
 
     return filePath;
-  }
-
-  async has(args: T): Promise<boolean> {
-    const filePath = await this.resolveFilePath(args);
-    return await pathExists(filePath);
-  }
-
-  /**
-   * Deletes a file from the cache if it exists.
-   *
-   * @param args The arguments used to determine the file's identity
-   * @returns True if the file was deleted, false if it didn't exist
-   */
-  async expire(args: T): Promise<boolean> {
-    const filePath = await this.resolveFilePath(args);
-
-    try {
-      await Promise.all([
-        this._cleanupGroupSemaphore.acquire("expire"),
-        this._semaphore.acquire(filePath),
-      ]);
-
-      if (await pathExists(filePath)) {
-        await deleteFile(filePath);
-        return true;
-      } else {
-        return false;
-      }
-    } finally {
-      this._semaphore.release(filePath);
-      this._cleanupGroupSemaphore.release("expire");
-    }
-  }
-
-  /**
-   * Stops the background cleanup process, but does not delete any cached files.
-   */
-  destroy() {
-    if (this._intervalId) {
-      clearInterval(this._intervalId);
-      this._intervalId = null;
-    }
-  }
-
-  /**
-   * Resolves the filename for the cache based on the provided arguments.
-   *
-   * Uses the provided `resolveFileName` function if available, or falls back to
-   * generating a hash from the arguments to create a unique file name.
-   */
-  private async resolveFileName(args: T): Promise<FileName> {
-    const [name, ext] = await Promise.all([
-      this._resolveCacheFileKey(args),
-      this._ext(args),
-    ]);
-
-    return path.format({
-      name,
-      ext,
-    }) as FileName;
   }
 
   /**
@@ -219,6 +146,38 @@ class FileCache<T extends Record<string, any>> {
     );
 
     return filePath;
+  }
+
+  /**
+   * Stops the background cleanup process, but does not delete any cached files.
+   */
+  destroy() {
+    if (this._intervalId) {
+      clearInterval(this._intervalId);
+      this._intervalId = null;
+    }
+  }
+
+  async has(args: T): Promise<boolean> {
+    const filePath = await this.resolveFilePath(args);
+    return await pathExists(filePath);
+  }
+
+  /**
+   * Runs a cleanup pass to remove files older than 1 day from the cache.
+   * This is called periodically, but can be triggered manually.
+   */
+  async cleanup() {
+    try {
+      await this._cleanupGroupSemaphore.acquire("cleanup");
+      await findNuke(this._cachePath, {
+        olderThan: this._ttl,
+        verbose: true,
+        deleteEmptyDirectories: true,
+      });
+    } finally {
+      this._cleanupGroupSemaphore.release("cleanup");
+    }
   }
 }
 

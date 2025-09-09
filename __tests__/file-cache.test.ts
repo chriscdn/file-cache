@@ -10,9 +10,9 @@ const pause = async (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const testPDFFile = "./__tests__/pdfs/lorem.pdf";
 
 describe("Cache Expiration", async () => {
-  const cache = new FileCache({
+  const cache = new FileCache<{ a: number }>({
     cachePath: await temp.mkdir("file-cache-test"),
-    cb: async (filePath, { a }: { a: number }) => {
+    cb: async (filePath, { a }) => {
       await fs.copyFile(
         testPDFFile,
         filePath,
@@ -25,7 +25,7 @@ describe("Cache Expiration", async () => {
 
   it("sync", async () => {
     //
-    const filePath3 = await cache.getFile({ a: 3 });
+    const filePath3 = await cache.getFile({ a: 1 });
 
     // test if filePath exists
     expect(await pathExists(filePath3)).toBe(true);
