@@ -1,4 +1,6 @@
 {
   "extends": "@tsconfig/strictest/tsconfig.json",
-  "compilerOptions": { "allowSyntheticDefaultImports": true }
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true
+  }
 }
