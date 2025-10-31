@@ -139,9 +139,9 @@ class FileCache<T extends Record<string, any>> {
 
     const filePath = path.resolve(
       this._cachePath,
-      fileName[0],
-      fileName[1],
-      fileName[2],
+      fileName[0]!,
+      fileName[1]!,
+      fileName[2]!,
       fileName,
     );
 
