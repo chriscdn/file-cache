@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { FileCache } from "../src";
+import { FileCache } from "../lib";
 import { Duration } from "@chriscdn/duration";
 import { promises as fs } from "fs";
 import temp from "temp";
 import { pathExists } from "path-exists";
 
-const pause = async (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const pause = async (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 const testPDFFile = "./__tests__/pdfs/lorem.pdf";
 

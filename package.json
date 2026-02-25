@@ -6,33 +6,28 @@
   "author": "Christopher Meyer <chris@schwiiz.org>",
   "license": "MIT",
   "type": "module",
-  "source": "./src/index.ts",
-  "main": "./lib/file-cache.cjs",
-  "module": "./lib/file-cache.module.js",
-  "exports": {
-    "types": "./lib/index.d.ts",
-    "require": "./lib/file-cache.cjs",
-    "default": "./lib/file-cache.modern.js"
-  },
+  "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
+  "exports": "./lib/index.js",
   "scripts": {
-    "build": "rm -rf ./lib/ && microbundle --target node --format modern,esm,cjs",
+    "build": "tsup",
     "test": "vitest"
   },
   "dependencies": {
-    "@chriscdn/duration": "^1.0.3",
-    "@chriscdn/find-nuke": "^0.0.5",
-    "@chriscdn/promise-semaphore": "^3.1.1",
+    "@chriscdn/duration": "^2.0.0",
+    "@chriscdn/find-nuke": "^2.0.0",
+    "@chriscdn/promise-semaphore": "^4.0.0",
     "path-exists": "^5.0.0",
     "sha1": "^1.1.1",
-    "temp": "^0.9.4",
     "touch": "^3.1.1"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.7",
     "@types/sha1": "^1.1.5",
+    "@types/temp": "^0.9.4",
     "@types/touch": "^3.1.5",
-    "microbundle": "^0.15.1",
+    "temp": "^0.9.4",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.6"
   },

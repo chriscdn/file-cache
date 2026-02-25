@@ -2,7 +2,7 @@ type DirectoryPath = string;
 type FileName = string;
 type FilePath = string;
 type Milliseconds = number;
-export type FileCacheOptions<T extends Record<string, any>> = {
+type FileCacheOptions<T extends Record<string, any>> = {
     cachePath: DirectoryPath;
     autoCreateCachePath?: boolean;
     cb: (filePath: FilePath, args: T, cache: FileCache<T>) => Promise<void>;
@@ -58,4 +58,5 @@ declare class FileCache<T extends Record<string, any>> {
      */
     cleanup(): Promise<void>;
 }
-export { type DirectoryPath, FileCache, type FileName, type FilePath };
+
+export { type DirectoryPath, FileCache, type FileCacheOptions, type FileName, type FilePath };
